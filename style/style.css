@@ -1,0 +1,31 @@
+body {
+    font-family: Georgia;
+    text-align: center;
+}
+
+.book-week {
+    font-weight: bold;
+    margin: 1em;
+    font-size: 20;
+}
+.book-item {
+    padding: .5em;
+    text-decoration: none;
+}
+
+.book-item:hover {
+    background-color: bisque;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+header {
+    padding: 1px;
+    border-radius: 10px;
+    background: coral;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}

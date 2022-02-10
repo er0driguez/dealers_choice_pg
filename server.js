@@ -1,23 +1,27 @@
 const express = require('express');
 const app = express();
-const port = 8080;
-const pg = require('pg');
-const client = new pg.Client('postgres://localhost/library');
+const db = require('./db');
+const seed = require('./seed');
+const path = require('path');
 
+app.use(express.static(path.join(__dirname, 'style')));
 
 app.get('/', async (req, res, next) => {
     try{
-    const data = await client.query(`SELECT * FROM books`);
+    const data = await db.query(`SELECT * FROM books`);
     const books = data.rows;
 
     const html = `
     <html>
         <head>
             <title>Friendly Neighborhood Library</title>
+            <link rel="stylesheet" href="/style.css">
         </head>
         <body>
-            <h1>Your Neighborhood Library</h1>
-            ${books.map( book => `<div class='book-item'><a href="/books/${book.id}">${book.title}</a>
+           <header> <h1>Your Neighborhood Library</h1> </header>
+           
+           <div class='book-week'>Top 3 Books Of The Week </div>
+           ${books.map( book => `<div class='book-item'><a href="/books/${book.id}">${book.title}</a>
             </div>`).join("")}
         </body>
     </html>
@@ -31,7 +35,7 @@ app.get('/', async (req, res, next) => {
 
 app.get('/books/:id', async (req, res, next) => {
     try {
-        const response = await client.query(`SELECT * FROM books WHERE id=$1`, [req.params.id]);
+        const response = await db.query(`SELECT * FROM books WHERE id=$1`, [req.params.id]);
         const book = response.rows[0];
 
         const html = `
@@ -42,9 +46,14 @@ app.get('/books/:id', async (req, res, next) => {
                 <body>
                     <h1>${book.title}</h1>
                     <div class="author-info">By: ${book.author}</div>
-                    Checked Out By: ${book.borrower}
                     <div class="book-info">
-                        ${book.about}
+                        Status: ${book.checkedout}
+                    </div>
+                    <div class="borrower-name">
+                    Checked Out By: ${book.borrower}
+                    </div>
+                    <div class="book-about">
+                    ${book.about}
                     </div>
                 <body>
             </html>
@@ -59,7 +68,14 @@ app.get('/books/:id', async (req, res, next) => {
 
 const setup = async() => {
     try {
-        await client.connect();
+        await db.connect();
+        console.log('connected to db');
+        await db.query(seed());
+
+        const port = process.env.PORT || 8080;
+        app.listen(port, () => {
+            console.log(`listening on port ${port}`);
+        });
     }
     catch(err) {
         console.log(err);
@@ -68,9 +84,7 @@ const setup = async() => {
 
 setup();
 
- app.listen(port, () => {
-     console.log(`listening on port ${port}`);
- });
+ 
 
 
 
